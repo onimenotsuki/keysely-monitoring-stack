@@ -1,0 +1,7 @@
+name: keysely-monitoring-stack
+description: Keysely observability infrastructure on Azure (Managed Grafana, AKS, LGTM, OpenTelemetry)
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+    typescript: true

@@ -1,0 +1,9 @@
+config:
+  azure-native:location: westeurope
+  keysely-monitoring-stack:baseName: keysely-mon-prod
+  keysely-monitoring-stack:environment: prod
+  keysely-monitoring-stack:aksNodeCount: "3"
+  keysely-monitoring-stack:aksVmSize: Standard_D4s_v5
+  keysely-monitoring-stack:monitoringNamespace: monitoring
+  # Set secrets locally or in Pulumi Cloud for each stack (never commit):
+  # pulumi config set --secret keysely-monitoring-stack:supabaseDbPassword <value>
