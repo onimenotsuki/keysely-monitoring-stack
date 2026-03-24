@@ -31,6 +31,9 @@ jobs:
     name: Pulumi preview (dev)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stack
     steps:
       - uses: actions/checkout@v4
 
@@ -38,6 +41,7 @@ jobs:
         with:
           node-version: "20"
           cache: npm
+          cache-dependency-path: stack/package-lock.json
 
       - run: npm ci
 
@@ -54,13 +58,16 @@ jobs:
         with:
           command: preview
           stack-name: dev
-          work-dir: .
+          work-dir: stack
 
   up-prod:
     name: Pulumi up (prod)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    defaults:
+      run:
+        working-directory: stack
     steps:
       - uses: actions/checkout@v4
 
@@ -68,6 +75,7 @@ jobs:
         with:
           node-version: "20"
           cache: npm
+          cache-dependency-path: stack/package-lock.json
 
       - run: npm ci
 
@@ -84,13 +92,16 @@ jobs:
         with:
           command: up
           stack-name: prod
-          work-dir: .
+          work-dir: stack
 
   up-manual:
     name: Pulumi up (manual)
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.stack == 'prod' && 'production' || 'development' }}
+    defaults:
+      run:
+        working-directory: stack
     steps:
       - uses: actions/checkout@v4
 
@@ -98,6 +109,7 @@ jobs:
         with:
           node-version: "20"
           cache: npm
+          cache-dependency-path: stack/package-lock.json
 
       - run: npm ci
 
@@ -114,4 +126,4 @@ jobs:
         with:
           command: up
           stack-name: ${{ github.event.inputs.stack }}
-          work-dir: .
+          work-dir: stack

@@ -42,7 +42,7 @@ Onboarding note for your **internal wiki**: link these guides and copy [docs/int
 | [`infra/`](./infra/) | Resource group, network, AKS, Managed Grafana |
 | [`k8s/`](./k8s/) | Helm releases, optional Supabase `Secret` |
 | [`Pulumi.dev.yaml`](./Pulumi.dev.yaml) / [`Pulumi.prod.yaml`](./Pulumi.prod.yaml) | Stack defaults |
-| [`.github/workflows/pulumi.yml`](./.github/workflows/pulumi.yml) | `preview` on PRs, `up` on `main` for `prod` |
+| [`../.github/workflows/pulumi.yml`](../.github/workflows/pulumi.yml) | `preview` on PRs, `up` on `main` for `prod` |
 
 ## Local setup
 
@@ -69,7 +69,7 @@ Supabase-related **secrets**: see [docs/supabase-grafana.md](./docs/supabase-gra
 
 ## CI/CD (GitHub Actions)
 
-Workflow: [`.github/workflows/pulumi.yml`](.github/workflows/pulumi.yml).
+Workflow: [`../.github/workflows/pulumi.yml`](../.github/workflows/pulumi.yml).
 
 | Event | Behavior |
 |--------|----------|
