@@ -17,7 +17,7 @@ Wire **Managed Grafana** datasources to Prometheus and Loki using the cluster in
 
 ## Prerequisites
 
-- **Node.js** 20+
+- **Node.js** 22+
 - **Pulumi CLI** 3.x and a [Pulumi Cloud](https://app.pulumi.com) account (or self-hosted backend)
 - **Azure CLI** (`az`) for human login, or OIDC in CI
 - **kubectl** (optional, for debugging)

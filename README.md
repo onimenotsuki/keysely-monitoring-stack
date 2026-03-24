@@ -8,7 +8,7 @@ Infrastructure as Code for **observability on Microsoft Azure** (**KEY-99**): [P
 
 | Layer | Technologies |
 |-------|----------------|
-| IaC | Pulumi 3.x, Node.js 20+, TypeScript 5 |
+| IaC | Pulumi 3.x, Node.js 22+, TypeScript 5 |
 | Azure | Resource group, VNet, AKS (Azure CNI overlay), Azure Managed Grafana |
 | Kubernetes / Helm | `kube-prometheus-stack` (in-cluster Grafana disabled), `grafana/loki`, `open-telemetry/opentelemetry-collector` |
 | Packages | `@pulumi/pulumi`, `@pulumi/azure-native`, `@pulumi/kubernetes`, `@pulumi/random` |

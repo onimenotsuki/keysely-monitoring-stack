@@ -4,6 +4,9 @@
   "private": true,
   "description": "Keysely observability stack on Azure (Pulumi, AKS, Managed Grafana) — KEY-99",
   "main": "index.ts",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
@@ -15,7 +18,7 @@
     "@pulumi/random": "^4.16.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.5.0"
   }
 }

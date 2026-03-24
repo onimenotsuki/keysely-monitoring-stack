@@ -1,0 +1,11 @@
+---
+description: Use Node.js 22 or later across the Keysely repository
+alwaysApply: true
+---
+
+# Node.js runtime
+
+- Target **Node.js 22.x** (LTS) as the **minimum** supported version for this repository.
+- When adding or editing **package.json**, **engines**, **Dockerfile** base images, **GitHub Actions** (`actions/setup-node`, `node-version`), **nvm/.node-version**, **documentation** (README prerequisites), or **TypeScript `@types/node`**, use **22+** consistently.
+- Do not introduce **Node 20** or older as the canonical runtime; prefer upgrading existing references to **22** rather than keeping mixed versions.
+- For local scripts and CI, specify an explicit **22** LTS line (e.g. `22` or `22.x`) unless the project adopts a narrower pin (e.g. `.nvmrc`).
