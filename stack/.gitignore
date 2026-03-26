@@ -1,16 +1,9 @@
 # Dependencies
 node_modules/
 
-# Pulumi
-.pulumi/
-*.pyc
-__pycache__/
-.venv/
-venv/
-
 # Build
-bin/
 dist/
+cdk.out/
 *.js.map
 
 # Local secrets / env (never commit real values)
@@ -34,6 +27,3 @@ yarn-error.log*
 # TypeScript incremental
 *.tsbuildinfo
 
-# Optional: ignore local stack backups with secrets (uncomment if needed)
-# Pulumi.*.yaml
-# Note: this repo commits Pulumi.dev.yaml / Pulumi.prod.yaml without secret values.

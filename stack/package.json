@@ -2,23 +2,30 @@
   "name": "keysely-monitoring-stack",
   "version": "0.1.0",
   "private": true,
-  "description": "Keysely observability stack on Azure (Pulumi, AKS, Managed Grafana) — KEY-99",
-  "main": "index.ts",
+  "description": "Keysely observability stack on AWS CDK (EKS, Amazon Managed Grafana) — KEY-99",
+  "main": "bin/keysely-monitoring-stack.js",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "watch": "tsc -w",
+    "typecheck": "tsc --noEmit",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "diff": "cdk diff --fail false",
+    "deploy:dev": "cdk deploy KeyselyMonitoringStack-dev --require-approval never",
+    "deploy:prod": "cdk deploy KeyselyMonitoringStack-prod --require-approval never"
   },
   "dependencies": {
-    "@pulumi/azure-native": "^2.67.0",
-    "@pulumi/kubernetes": "^4.18.0",
-    "@pulumi/pulumi": "^3.136.0",
-    "@pulumi/random": "^4.16.0"
+    "@aws-cdk/lambda-layer-kubectl-v29": "^2.0.0",
+    "aws-cdk-lib": "^2.187.0",
+    "constructs": "^10.4.2"
   },
   "devDependencies": {
+    "aws-cdk": "^2.1018.0",
     "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.0"
   }
 }

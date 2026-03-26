@@ -1,0 +1,10 @@
+import * as pulumi from "@pulumi/pulumi";
+export declare const resourceGroupName: pulumi.Output<string>;
+export declare const vnetName: pulumi.Output<string>;
+export declare const aksSubnetName: pulumi.Output<string | undefined>;
+export declare const aksClusterName: pulumi.Output<string>;
+export declare const aksApiFqdn: pulumi.Output<string>;
+export declare const managedGrafanaName: pulumi.Output<string>;
+export declare const managedGrafanaEndpoint: pulumi.Output<string>;
+export declare const monitoringKubernetesNamespace: string;
+export declare const environmentName: string;

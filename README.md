@@ -4,23 +4,19 @@ Monorepo for Keysely. Infrastructure and observability live under [`stack/`](./s
 
 ## Observability stack (`stack/`)
 
-Infrastructure as Code for **observability on Microsoft Azure** (**KEY-99**): [Pulumi](https://www.pulumi.com/) (TypeScript), **Azure Managed Grafana**, **AKS**, and in-cluster **Prometheus**, **Loki**, and **OpenTelemetry Collector** (Helm). Optional **Supabase (PostgreSQL)** integration for Grafana datasources is documented in the stack docs.
+Infrastructure as Code for **observability on AWS** (**KEY-99**) using **AWS CDK + TypeScript** with **EKS**, **Amazon Managed Grafana**, and in-cluster **Prometheus**, **Loki**, and **OpenTelemetry Collector** (Helm).
 
-| Layer | Technologies |
-|-------|----------------|
-| IaC | Pulumi 3.x, Node.js 22+, TypeScript 5 |
-| Azure | Resource group, VNet, AKS (Azure CNI overlay), Azure Managed Grafana |
-| Kubernetes / Helm | `kube-prometheus-stack` (in-cluster Grafana disabled), `grafana/loki`, `open-telemetry/opentelemetry-collector` |
-| Packages | `@pulumi/pulumi`, `@pulumi/azure-native`, `@pulumi/kubernetes`, `@pulumi/random` |
+- IaC: AWS CDK v2, Node.js 22+, TypeScript 5
+- AWS: VPC, EKS, Amazon Managed Grafana
+- Kubernetes / Helm: `kube-prometheus-stack` (in-cluster Grafana disabled), `grafana/loki`, `open-telemetry/opentelemetry-collector`
+- Packages: `aws-cdk-lib`, `constructs`
 
-**Project name (Pulumi):** `keysely-monitoring-stack`
+**CDK app:** `stack/bin/keysely-monitoring-stack.ts`
 
 ## Repository layout
 
-| Path | Purpose |
-|------|---------|
-| [`stack/`](./stack/) | Pulumi program: `infra/`, `k8s/`, `Pulumi.*.yaml`, `package.json` |
-| [`.github/workflows/pulumi.yml`](./.github/workflows/pulumi.yml) | CI: PR → `pulumi preview` on `dev`; push to `main` → `pulumi up` on `prod` |
+- [`stack/`](./stack/): CDK app (`bin/`, `lib/`, `cdk.json`, `package.json`)
+- [`.github/workflows/cdk.yml`](./.github/workflows/cdk.yml): CI with `cdk diff` on PR and `cdk deploy` on `main`
 
 Full architecture, prerequisites, local setup, configuration keys, and GitHub secrets are in [**stack/README.md**](./stack/README.md).
 
@@ -29,10 +25,9 @@ Full architecture, prerequisites, local setup, configuration keys, and GitHub se
 ```bash
 cd stack
 npm install
-pulumi login
-pulumi stack select dev   # or stack init dev once
-az login
-pulumi up
+aws sso login
+npm run synth
+npm run deploy:dev
 ```
 
 ## License
