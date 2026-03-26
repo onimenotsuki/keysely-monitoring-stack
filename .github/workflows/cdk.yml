@@ -17,10 +17,11 @@ permissions:
   contents: read
 
 jobs:
-  diff:
+  diff-dev:
     name: CDK diff (dev)
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     runs-on: ubuntu-latest
+    environment: development
     defaults:
       run:
         working-directory: stack
@@ -42,6 +43,7 @@ jobs:
 
   deploy-dev:
     name: CDK deploy (dev)
+    needs: diff-dev
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     runs-on: ubuntu-latest
     environment: development
