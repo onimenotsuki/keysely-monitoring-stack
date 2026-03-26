@@ -19,7 +19,7 @@ permissions:
 jobs:
   diff:
     name: CDK diff (dev)
-    if: github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,9 +40,33 @@ jobs:
           role-session-name: keysely-monitoring-stack-diff-dev-${{ github.ref_name }}
       - run: npx cdk diff KeyselyMonitoringStack-dev --fail false
 
+  deploy-dev:
+    name: CDK deploy (dev)
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
+    runs-on: ubuntu-latest
+    environment: development
+    defaults:
+      run:
+        working-directory: stack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: stack/package-lock.json
+      - run: npm install
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: keysely-monitoring-stack-deploy-dev-${{ github.ref_name }}
+      - run: npx cdk deploy KeyselyMonitoringStack-dev --require-approval never
+
   deploy-prod:
     name: CDK deploy (prod)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     defaults:
