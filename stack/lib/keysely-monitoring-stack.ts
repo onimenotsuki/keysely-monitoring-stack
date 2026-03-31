@@ -1,5 +1,13 @@
 import * as cdk from "aws-cdk-lib";
-import { aws_ec2 as ec2, aws_eks as eks, aws_grafana as grafana } from "aws-cdk-lib";
+import * as path from "node:path";
+import {
+  aws_ec2 as ec2,
+  aws_eks as eks,
+  aws_grafana as grafana,
+  aws_iam as iam,
+  aws_lambda as lambda,
+  custom_resources as cr,
+} from "aws-cdk-lib";
 import { KubectlV29Layer } from "@aws-cdk/lambda-layer-kubectl-v29";
 import { Construct } from "constructs";
 
@@ -117,13 +125,102 @@ export class KeyselyMonitoringStack extends cdk.Stack {
     });
     otel.node.addDependency(loki);
 
+    const grafanaSg = new ec2.SecurityGroup(this, "GrafanaSg", {
+      vpc,
+      description: "ENIs for Managed Grafana VPC connectivity",
+      allowAllOutbound: true,
+    });
+
     const workspace = new grafana.CfnWorkspace(this, "ManagedGrafana", {
       name: `${props.baseName}-amg`,
       accountAccessType: "CURRENT_ACCOUNT",
       authenticationProviders: ["AWS_SSO"],
       permissionType: "SERVICE_MANAGED",
-      dataSources: ["PROMETHEUS", "LOKI"],
+      dataSources: ["PROMETHEUS"],
+      vpcConfiguration: {
+        securityGroupIds: [grafanaSg.securityGroupId],
+        subnetIds: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds,
+      },
     });
+
+    // Expose Loki via internal NLB so Grafana VPC ENIs can reach it
+    const LOKI_NODE_PORT = 30_100;
+    const lokiLb = cluster.addManifest("LokiInternalLb", {
+      apiVersion: "v1",
+      kind: "Service",
+      metadata: {
+        name: "loki-lb",
+        namespace: props.monitoringNamespace,
+        annotations: {
+          "service.beta.kubernetes.io/aws-load-balancer-scheme": "internal",
+          "service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+        },
+      },
+      spec: {
+        type: "LoadBalancer",
+        selector: { "app.kubernetes.io/name": "loki" },
+        ports: [
+          { name: "http", port: 3100, targetPort: 3100, nodePort: LOKI_NODE_PORT, protocol: "TCP" },
+        ],
+      },
+    });
+    lokiLb.node.addDependency(loki);
+
+    new ec2.CfnSecurityGroupIngress(this, "NlbToLokiIngress", {
+      groupId: cluster.clusterSecurityGroupId,
+      ipProtocol: "tcp",
+      fromPort: LOKI_NODE_PORT,
+      toPort: LOKI_NODE_PORT,
+      cidrIp: vpc.vpcCidrBlock,
+      description: "Internal NLB health-checks and traffic to Loki NodePort",
+    });
+
+    // Lambda-backed Custom Resource that auto-provisions the Loki datasource
+    const lokiServiceTag = `${props.monitoringNamespace}/loki-lb`;
+
+    const dsProvisionerFn = new lambda.Function(this, "GrafanaDsProvisioner", {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "grafana-ds-provisioner")),
+      timeout: cdk.Duration.minutes(10),
+      description: "Provisions Loki datasource in Managed Grafana via HTTP API",
+    });
+
+    dsProvisionerFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "grafana:CreateWorkspaceServiceAccount",
+          "grafana:CreateWorkspaceServiceAccountToken",
+          "grafana:DeleteWorkspaceServiceAccount",
+          "grafana:DeleteWorkspaceServiceAccountToken",
+        ],
+        resources: [
+          `arn:aws:grafana:${this.region}:${this.account}:/workspaces/${workspace.attrId}`,
+          `arn:aws:grafana:${this.region}:${this.account}:/workspaces/${workspace.attrId}/*`,
+        ],
+      }),
+    );
+
+    dsProvisionerFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeTags"],
+        resources: ["*"],
+      }),
+    );
+
+    const dsProvider = new cr.Provider(this, "GrafanaDsProvider", {
+      onEventHandler: dsProvisionerFn,
+    });
+
+    const lokiDatasource = new cdk.CustomResource(this, "LokiDatasource", {
+      serviceToken: dsProvider.serviceToken,
+      properties: {
+        WorkspaceId: workspace.attrId,
+        GrafanaEndpoint: workspace.attrEndpoint,
+        LokiServiceTag: lokiServiceTag,
+      },
+    });
+    lokiDatasource.node.addDependency(lokiLb);
 
     cdk.Tags.of(this).add("environment", commonTags.environment);
     cdk.Tags.of(this).add("project", commonTags.project);
@@ -134,5 +231,6 @@ export class KeyselyMonitoringStack extends cdk.Stack {
     new cdk.CfnOutput(this, "EksClusterEndpoint", { value: cluster.clusterEndpoint });
     new cdk.CfnOutput(this, "ManagedGrafanaWorkspaceId", { value: workspace.attrId });
     new cdk.CfnOutput(this, "ManagedGrafanaEndpoint", { value: workspace.attrEndpoint });
+    new cdk.CfnOutput(this, "LokiDatasourceUrl", { value: lokiDatasource.getAttString("LokiUrl") });
   }
 }
